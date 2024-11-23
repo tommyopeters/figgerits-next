@@ -8,12 +8,10 @@ import { connect } from "@/lib/db";
 
 export async function GET() {
   connect();
-  console.log(process.env.ENCRYPTION_KEY);
   try {
-    // const userId = request.userId;
     const { userId, } = await auth();
     if (!userId) {
-      return NextResponse.redirect('/sign-in');
+      return new NextResponse(JSON.stringify({ message: 'User not logged in' }), { status: 401 });
     }
     console.log(userId);
     // Retrieve the user by user ID
@@ -29,7 +27,7 @@ export async function GET() {
       // const encryptedPuzzle = encrypt(JSON.stringify(puzzle));
       // res.status(200).json({ puzzle: encryptedPuzzle });
       // res.status(200).json({ puzzle });
-      NextResponse.json({ puzzle });
+      return NextResponse.json(puzzle);
     } else {
       // Get the list of puzzles already in the puzzleProgress array
       const playedPuzzles = user?.puzzleProgress?.map(progress => progress.puzzleId);
@@ -59,7 +57,7 @@ export async function GET() {
 
       // const encryptedPuzzle = encrypt(JSON.stringify(puzzle));
       // res.status(200).json({ puzzle: encryptedPuzzle });
-      return NextResponse.json({ puzzle });
+      return NextResponse.json( puzzle );
     }
 
 
