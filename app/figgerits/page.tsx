@@ -4,6 +4,19 @@ import { useAuth } from "@clerk/nextjs";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 
+type ElementType = string | number | undefined;
+
+interface CurrentElement {
+    type: ElementType,
+    index: ElementType,
+    ind: ElementType
+}
+
+interface Encoding {
+    [key: string]: number;
+
+}
+
 function Figgerits() {
 
     const { isLoaded, userId } = useAuth();
@@ -17,12 +30,16 @@ function Figgerits() {
     //       }
     // }, [isLoaded, userId, router]);
 
-    // useEffect(() => {
-    //     window.addEventListener('resize', setFullHeight);
-    //     window.addEventListener('orientationchange', setFullHeight);
-    //     // window.addEventListener('keydown', handleKeyDown);
-    //     document.addEventListener('DOMContentLoaded', setFullHeight);
-    // }, []);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+        console.log("keydown", active)
+        if (active === null) return;
+        console.log(`Key ${event.key} was pressed`);
+
+        if (!/^[a-zA-Z]$/.test(event.key)) return;
+        handleKeyboardInput(event.key.toLowerCase());
+    };
+
 
 
     const [loading, setLoading] = useState(false);
@@ -32,12 +49,32 @@ function Figgerits() {
     const [words, setWords] = useState<string[][] | null>([]);
     const [clues, setClues] = useState<{ word: string; clue: string }[]>([]);
     const [gameState, setGameState] = useState<{ complete: boolean, correct: boolean }>({ complete: false, correct: false });
-    const [encoding, setEncoding] = useState<{ [key: string]: number }>({});
+    const [encoding, setEncoding] = useState<Encoding>({});
     const [active, setActive] = useState<number | null>(null);
     const [highlighted, setHighlighted] = useState<number | null>(null);
-    const [actionThread, setActionThread] = useState([]);
+    const [actionThread, setActionThread] = useState<{
+        previousCharacter: string | null,
+        character: string,
+        active: number | null,
+        currentElement: CurrentElement
+    }[]>([]);
     const [userInput, setUserInput] = useState<{ [key: number]: string | null }>({});
-    const [currentElement, setCurrentElement] = useState({ type: '', index: 0, ind: 0 });
+    const [currentElement, setCurrentElement] = useState<CurrentElement>({ type: '', index: 0, ind: 0 });
+
+
+    useEffect(() => {
+        window.addEventListener('resize', setFullHeight);
+        window.addEventListener('orientationchange', setFullHeight);
+        window.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('DOMContentLoaded', setFullHeight);
+
+        return () => {
+            window.removeEventListener('resize', setFullHeight);
+            window.removeEventListener('orientationchange', setFullHeight);
+            window.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('DOMContentLoaded', setFullHeight);
+        };
+    }, [active, userInput, currentElement, actionThread, highlighted, encoding, gameState, clues, words, info, quote, handleKeyDown]);
 
     function setFullHeight() {
         const vh = window.innerHeight * 0.01;
@@ -73,14 +110,15 @@ function Figgerits() {
     }, []);
 
     const startGame = (quoteString: string, gameClues: { word: string, clue: string }[], infoString: string) => {
+        const encodedLetters = encodeLetters(quoteString);
         setQuote(quoteString);
         setWords(splitWords(quoteString));
-        setEncoding(encodeLetters(quoteString));
-        Object.keys(encoding).map((i) => {
-            // userInput[encoding[i]] = null;
-            setUserInput({ ...userInput, [encoding[i]]: "" });
-            setActionThread([]);
+        setEncoding(encodedLetters);
+        const initialUserInput: { [key: number]: string | null } = {};
+        Object.keys(encodedLetters).forEach((key) => {
+            initialUserInput[encodedLetters[key]] = null;
         });
+        setUserInput(initialUserInput);
         setClues(gameClues);
         setInfo(infoString);
     };
@@ -131,7 +169,7 @@ function Figgerits() {
     // IMPURE FUNCTIONS -------------------------------------------------
 
     const hasValue = (num: number): boolean => {
-        console.log(userInput[num], !!userInput[num])
+        // console.log(userInput[num], !!userInput[num])
         return !!userInput[num];
     };
 
@@ -141,6 +179,91 @@ function Figgerits() {
 
     const isEncoded = (char: string): boolean => {
         return !!encoding[char.toLowerCase()];
+    };
+
+    const activate = (event: MouseEvent, char: number, type: string) => {
+        setActive(char);
+        const targetElement = event.target as HTMLElement;
+        const currentAnswerBox = targetElement.classList.contains('answer-box') ? targetElement : targetElement.closest('.answer-box') as HTMLElement;
+        const index = currentAnswerBox.dataset.index;
+        const ind = currentAnswerBox.dataset.ind;
+        setCurrentElement({
+            index,
+            ind,
+            type
+        });
+        console.log(currentAnswerBox)
+    };
+
+    const handleKeyboardInput = (character: string) => {
+        if (active !== null) {
+            setActionThread([...actionThread, {
+                previousCharacter: userInput[active],
+                character,
+                active: active,
+                currentElement: currentElement
+            }]);
+            // (userInput.value as { [key: number]: string | null })[active.value] = character.toLowerCase();
+            setUserInput({ ...userInput, [active]: character.toLowerCase() });
+
+            if (Object.values(userInput).every((value) => value !== null)) {
+                console.log('All characters are filled!');
+
+                const isCorrect = (Object.keys(encoding).every((char) => {
+                    return userInput[encoding[char]] === char;
+                }))
+
+                setGameState({
+                    complete: true,
+                    correct: isCorrect
+                });
+
+                if (isCorrect) {
+                    // store.dispatch('completePuzzle')
+                }
+            } else {
+                const answerBoxes = document.querySelectorAll('.answer-box');
+                const activeElements = document.querySelectorAll('.active');
+                // check if there is an element with 'current' classname
+                const currentAnswerBox = document.querySelector('.current');
+
+                let activeElement;
+                if (currentAnswerBox) {
+                    activeElement = currentAnswerBox
+                } else {
+                    activeElement = activeElements.length > 0 ? activeElements[0] : null;
+                }
+
+                console.log(activeElement)
+
+                if (activeElement !== null) {
+                    let i = Array.from(answerBoxes).indexOf(activeElement) + 1;
+                    while (true) {
+                        if (i === answerBoxes.length) {
+                            i = 0;
+                        }
+                        const encodingElement = answerBoxes[i].querySelector('.encoding');
+                        const encoding = encodingElement?.textContent ? Number(encodingElement.textContent) : null;
+
+                        if (!!encoding && !hasValue(encoding)) {
+                            setActive(encoding);
+                            // nextTick(() => {
+                            //   activeElement.classList.remove('current');
+                            //   answerBoxes[i].classList.add('current');
+                            // });
+                            setCurrentElement({
+                                index: (answerBoxes[i] as HTMLElement).dataset.index,
+                                ind: (answerBoxes[i] as HTMLElement).dataset.ind,
+                                type: activeElement.closest('.quote') ? 'quote' : 'clue'
+                            })
+                            break;
+                        }
+
+                        i++;
+                    }
+                }
+            }
+        }
     };
 
     return (
@@ -154,13 +277,17 @@ function Figgerits() {
                                     word.map((char, ind) => (
                                         <li key={char + ind}>
                                             {isEncoded(char) ?
-                                                <div
+                                                <button
                                                     className={clsx('answer-box', {
                                                         current: currentElement.type === 'quote' && currentElement.index === ind,
                                                         hover: highlighted === encoding[char.toLowerCase()],
                                                         active: active === encoding[char.toLowerCase()],
                                                     }
-                                                    )}>
+                                                    )}
+                                                    onClick={(e) => activate(e, encoding[char.toLowerCase()], 'quote')}
+                                                    onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
+                                                    onMouseLeave={() => setHighlighted(null)}
+                                                >
                                                     <span className="user-input">
                                                         {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
                                                     </span>
@@ -168,7 +295,7 @@ function Figgerits() {
                                                     <span className="encoding">
                                                         {encoding[char.toLowerCase()]}
                                                     </span>
-                                                </div>
+                                                </button>
                                                 :
                                                 (char === ' ' ?
                                                     <div className="space" >
@@ -202,13 +329,16 @@ function Figgerits() {
                                     {
                                         clue.word.split('').map((char, ind) => (
                                             <li className="" key={`${char}-${ind}`}>
-                                                {isEncoded(char) && <div
+                                                {isEncoded(char) && <button
                                                     className={clsx('answer-box', {
                                                         current: currentElement.type === 'clue' && currentElement.index === ind,
                                                         hover: highlighted === encoding[char.toLowerCase()],
                                                         active: active === encoding[char.toLowerCase()],
                                                     }
                                                     )}
+                                                    onClick={(e) => activate(e, encoding[char.toLowerCase()], 'clue')}
+                                                    onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
+                                                    onMouseLeave={() => setHighlighted(null)}
                                                 //   :data-index="index" :data-ind="ind" @click="activate($event, encoding[char.toLowerCase()], 'clue')"
                                                 //   @mouseenter="highlight(encoding[char.toLowerCase()])" @mouseleave="highlight(null)"
                                                 >
@@ -219,7 +349,7 @@ function Figgerits() {
                                                     <span className="encoding">
                                                         {encoding[char.toLowerCase()]}
                                                     </span>
-                                                </div>}
+                                                </button>}
                                             </li>
                                         ))
                                     }

@@ -13,7 +13,7 @@ export async function GET() {
     if (!userId) {
       return new NextResponse(JSON.stringify({ message: 'User not logged in' }), { status: 401 });
     }
-    console.log(userId);
+    console.log(`userId: ${userId}`);
     // Retrieve the user by user ID
     const user = await UserModel.findOne({ uid: userId });
     if (!user) {
