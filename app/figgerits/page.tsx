@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from "@clerk/nextjs";
+// import { useAuth } from "@clerk/nextjs";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 
@@ -19,7 +19,7 @@ interface Encoding {
 
 function Figgerits() {
 
-    const { isLoaded, userId } = useAuth();
+    // const { isLoaded, userId } = useAuth();
 
     // useEffect(() => {
     //     if (!isLoaded) return;
@@ -181,7 +181,7 @@ function Figgerits() {
         return !!encoding[char.toLowerCase()];
     };
 
-    const activate = (event: MouseEvent, char: number, type: string) => {
+    const activate = (event: React.MouseEvent<HTMLButtonElement>, char: number, type: string) => {
         setActive(char);
         const targetElement = event.target as HTMLElement;
         const currentAnswerBox = targetElement.classList.contains('answer-box') ? targetElement : targetElement.closest('.answer-box') as HTMLElement;
@@ -267,103 +267,104 @@ function Figgerits() {
     };
 
     return (
-        <div className="figgerits">
-            <div className="quote">
-                <ul className="words">
-                    {words?.map((word, index) => (
-                        <li key={word.join('') + index}>
-                            <ul className="letters">
-                                {
-                                    word.map((char, ind) => (
-                                        <li key={char + ind}>
-                                            {isEncoded(char) ?
-                                                <button
-                                                    className={clsx('answer-box', {
-                                                        current: currentElement.type === 'quote' && currentElement.index === ind,
-                                                        hover: highlighted === encoding[char.toLowerCase()],
-                                                        active: active === encoding[char.toLowerCase()],
-                                                    }
-                                                    )}
-                                                    onClick={(e) => activate(e, encoding[char.toLowerCase()], 'quote')}
-                                                    onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
-                                                    onMouseLeave={() => setHighlighted(null)}
-                                                >
-                                                    <span className="user-input">
-                                                        {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
-                                                    </span>
-                                                    <span className="divider"></span>
-                                                    <span className="encoding">
-                                                        {encoding[char.toLowerCase()]}
-                                                    </span>
-                                                </button>
-                                                :
-                                                (char === ' ' ?
-                                                    <div className="space" >
-                                                        {char}
-                                                    </div>
-                                                    :
-                                                    <div className="non-char" >
-                                                        {char}
-                                                    </div>)
-                                            }
-                                        </li>
-                                    ))
-                                }
-                            </ul>
-                        </li>
-                    ))}
-                </ul >
-
-            </div >
-
-            <div className="clues">
-                <h3>Definition & words</h3>
-                <ul>
-                    {clues.map((clue) => (
-                        <li key={clue.word}>
-                            <div className="clue">
-                                {clue.clue}
-                            </div>
-                            <div className="word">
+        loading ? <div>Loading...</div> :
+            <div className="figgerits">
+                <div className="quote">
+                    <ul className="words">
+                        {words?.map((word, index) => (
+                            <li key={word.join('') + index}>
                                 <ul className="letters">
                                     {
-                                        clue.word.split('').map((char, ind) => (
-                                            <li className="" key={`${char}-${ind}`}>
-                                                {isEncoded(char) && <button
-                                                    className={clsx('answer-box', {
-                                                        current: currentElement.type === 'clue' && currentElement.index === ind,
-                                                        hover: highlighted === encoding[char.toLowerCase()],
-                                                        active: active === encoding[char.toLowerCase()],
-                                                    }
-                                                    )}
-                                                    onClick={(e) => activate(e, encoding[char.toLowerCase()], 'clue')}
-                                                    onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
-                                                    onMouseLeave={() => setHighlighted(null)}
-                                                //   :data-index="index" :data-ind="ind" @click="activate($event, encoding[char.toLowerCase()], 'clue')"
-                                                //   @mouseenter="highlight(encoding[char.toLowerCase()])" @mouseleave="highlight(null)"
-                                                >
-                                                    <span className="user-input">
-                                                        {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
-                                                    </span>
-                                                    <span className="divider"></span>
-                                                    <span className="encoding">
-                                                        {encoding[char.toLowerCase()]}
-                                                    </span>
-                                                </button>}
+                                        word.map((char, ind) => (
+                                            <li key={char + ind}>
+                                                {isEncoded(char) ?
+                                                    <button
+                                                        className={clsx('answer-box', {
+                                                            current: currentElement.type === 'quote' && currentElement.index === ind,
+                                                            hover: highlighted === encoding[char.toLowerCase()],
+                                                            active: active === encoding[char.toLowerCase()],
+                                                        }
+                                                        )}
+                                                        onClick={(e) => activate(e, encoding[char.toLowerCase()], 'quote')}
+                                                        onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
+                                                        onMouseLeave={() => setHighlighted(null)}
+                                                    >
+                                                        <span className="user-input">
+                                                            {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
+                                                        </span>
+                                                        <span className="divider"></span>
+                                                        <span className="encoding">
+                                                            {encoding[char.toLowerCase()]}
+                                                        </span>
+                                                    </button>
+                                                    :
+                                                    (char === ' ' ?
+                                                        <div className="space" >
+                                                            {char}
+                                                        </div>
+                                                        :
+                                                        <div className="non-char" >
+                                                            {char}
+                                                        </div>)
+                                                }
                                             </li>
                                         ))
                                     }
                                 </ul>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+                            </li>
+                        ))}
+                    </ul >
 
-            {/* <Result v-if="gameState.complete" :correct="gameState.correct" :quote="quote" :info="info" @next="handleNextPuzzle"
+                </div >
+
+                <div className="clues">
+                    <h3>Definition & words</h3>
+                    <ul>
+                        {clues.map((clue) => (
+                            <li key={clue.word}>
+                                <div className="clue">
+                                    {clue.clue}
+                                </div>
+                                <div className="word">
+                                    <ul className="letters">
+                                        {
+                                            clue.word.split('').map((char, ind) => (
+                                                <li className="" key={`${char}-${ind}`}>
+                                                    {isEncoded(char) && <button
+                                                        className={clsx('answer-box', {
+                                                            current: currentElement.type === 'clue' && currentElement.index === ind,
+                                                            hover: highlighted === encoding[char.toLowerCase()],
+                                                            active: active === encoding[char.toLowerCase()],
+                                                        }
+                                                        )}
+                                                        onClick={(e) => activate(e, encoding[char.toLowerCase()], 'clue')}
+                                                        onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
+                                                        onMouseLeave={() => setHighlighted(null)}
+                                                    //   :data-index="index" :data-ind="ind" @click="activate($event, encoding[char.toLowerCase()], 'clue')"
+                                                    //   @mouseenter="highlight(encoding[char.toLowerCase()])" @mouseleave="highlight(null)"
+                                                    >
+                                                        <span className="user-input">
+                                                            {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
+                                                        </span>
+                                                        <span className="divider"></span>
+                                                        <span className="encoding">
+                                                            {encoding[char.toLowerCase()]}
+                                                        </span>
+                                                    </button>}
+                                                </li>
+                                            ))
+                                        }
+                                    </ul>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {/* <Result v-if="gameState.complete" :correct="gameState.correct" :quote="quote" :info="info" @next="handleNextPuzzle"
                 @back="handleBack" @reset="handleReset"></Result>
                 <Keyboard @clicked="handleKeyboardInput" @delete="handleDelete" @undo="handleUndo"></Keyboard> */}
-        </div >
+            </div >
     )
 }
 export default Figgerits
