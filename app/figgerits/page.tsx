@@ -2,7 +2,7 @@
 
 // import { useAuth } from "@clerk/nextjs";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 type ElementType = string | number | undefined;
 
@@ -32,9 +32,9 @@ function Figgerits() {
 
 
     const handleKeyDown = (event: KeyboardEvent) => {
-        console.log("keydown", active)
+
         if (active === null) return;
-        console.log(`Key ${event.key} was pressed`);
+
 
         if (!/^[a-zA-Z]$/.test(event.key)) return;
         handleKeyboardInput(event.key.toLowerCase());
@@ -83,14 +83,14 @@ function Figgerits() {
 
     useEffect(() => {
         setLoading(true);
-        console.log("FETCING")
+
         fetch('/api/puzzle')
             .then(response => response.json())
             .then(data => {
-                console.log(data)
+
 
                 if (data) {
-                    console.log("Starting game")
+
                     startGame(data.quote, data.clues, data.info);
                     setLoading(false);
                 }
@@ -152,7 +152,7 @@ function Figgerits() {
 
     const encodeLetters = (quote: string): { [key: string]: number } => {
         const uniqueCharacters = getUniqueCharacters(quote);
-        console.log(uniqueCharacters);
+
         const encodedLetters: { [key: string]: number } = {};
 
         for (const char of uniqueCharacters) {
@@ -169,7 +169,7 @@ function Figgerits() {
     // IMPURE FUNCTIONS -------------------------------------------------
 
     const hasValue = (num: number): boolean => {
-        // console.log(userInput[num], !!userInput[num])
+        // 
         return !!userInput[num];
     };
 
@@ -192,7 +192,7 @@ function Figgerits() {
             ind,
             type
         });
-        console.log(currentAnswerBox)
+
     };
 
     const handleKeyboardInput = (character: string) => {
@@ -205,66 +205,66 @@ function Figgerits() {
             }]);
             // (userInput.value as { [key: number]: string | null })[active.value] = character.toLowerCase();
             setUserInput({ ...userInput, [active]: character.toLowerCase() });
+        }
+    };
 
-            if (Object.values(userInput).every((value) => value !== null)) {
-                console.log('All characters are filled!');
+    useEffect(() => {
+        if (Object.values(userInput).every((value) => value !== null)) {
+            console.log('All characters are filled!');
 
-                const isCorrect = (Object.keys(encoding).every((char) => {
-                    return userInput[encoding[char]] === char;
-                }))
+            const isCorrect = (Object.keys(encoding).every((char) => {
+                return userInput[encoding[char]] === char;
+            }))
 
-                setGameState({
-                    complete: true,
-                    correct: isCorrect
-                });
+            setGameState({
+                complete: true,
+                correct: isCorrect
+            });
 
-                if (isCorrect) {
-                    // store.dispatch('completePuzzle')
-                }
+            if (isCorrect) {
+                // store.dispatch('completePuzzle')
+            }
+        } else {
+            const answerBoxes = document.querySelectorAll('.answer-box');
+            const activeElements = document.querySelectorAll('.active');
+            // check if there is an element with 'current' classname
+            const currentAnswerBox = document.querySelector('.current');
+
+            let activeElement;
+            if (currentAnswerBox) {
+                activeElement = currentAnswerBox
+
             } else {
-                const answerBoxes = document.querySelectorAll('.answer-box');
-                const activeElements = document.querySelectorAll('.active');
-                // check if there is an element with 'current' classname
-                const currentAnswerBox = document.querySelector('.current');
+                activeElement = activeElements.length > 0 ? activeElements[0] : null;
+            }
 
-                let activeElement;
-                if (currentAnswerBox) {
-                    activeElement = currentAnswerBox
-                } else {
-                    activeElement = activeElements.length > 0 ? activeElements[0] : null;
-                }
 
-                console.log(activeElement)
 
-                if (activeElement !== null) {
-                    let i = Array.from(answerBoxes).indexOf(activeElement) + 1;
-                    while (true) {
-                        if (i === answerBoxes.length) {
-                            i = 0;
-                        }
-                        const encodingElement = answerBoxes[i].querySelector('.encoding');
-                        const encoding = encodingElement?.textContent ? Number(encodingElement.textContent) : null;
+            if (activeElement !== null) {
+                let i = Array.from(answerBoxes).indexOf(activeElement) + 1;
 
-                        if (!!encoding && !hasValue(encoding)) {
-                            setActive(encoding);
-                            // nextTick(() => {
-                            //   activeElement.classList.remove('current');
-                            //   answerBoxes[i].classList.add('current');
-                            // });
-                            setCurrentElement({
-                                index: (answerBoxes[i] as HTMLElement).dataset.index,
-                                ind: (answerBoxes[i] as HTMLElement).dataset.ind,
-                                type: activeElement.closest('.quote') ? 'quote' : 'clue'
-                            })
-                            break;
-                        }
-
-                        i++;
+                while (true) {
+                    if (i === answerBoxes.length) {
+                        i = 0;
+                        console.log('turning around')
                     }
+                    const encodingElement = answerBoxes[i].querySelector('.encoding');
+                    const encoding = encodingElement?.textContent ? Number(encodingElement.textContent) : null;
+                    if (!!encoding && !hasValue(encoding)) {
+                        setActive(encoding);
+                        setCurrentElement({
+                            index: (answerBoxes[i] as HTMLElement).dataset.index,
+                            ind: (answerBoxes[i] as HTMLElement).dataset.ind,
+                            type: (answerBoxes[i] as HTMLElement).dataset.type,
+                        })
+                        break;
+                    }
+
+                    i++;
                 }
             }
         }
-    };
+    }, [userInput]);
 
     return (
         loading ? <div>Loading...</div> :
@@ -279,8 +279,11 @@ function Figgerits() {
                                             <li key={char + ind}>
                                                 {isEncoded(char) ?
                                                     <button
+                                                        data-index={index}
+                                                        data-ind={ind}
+                                                        data-type="quote"
                                                         className={clsx('answer-box', {
-                                                            current: currentElement.type === 'quote' && currentElement.index === ind,
+                                                            current: currentElement.type == 'quote' && currentElement.index == index && currentElement.ind == ind,
                                                             hover: highlighted === encoding[char.toLowerCase()],
                                                             active: active === encoding[char.toLowerCase()],
                                                         }
@@ -320,7 +323,7 @@ function Figgerits() {
                 <div className="clues">
                     <h3>Definition & words</h3>
                     <ul>
-                        {clues.map((clue) => (
+                        {clues.map((clue, index) => (
                             <li key={clue.word}>
                                 <div className="clue">
                                     {clue.clue}
@@ -330,27 +333,31 @@ function Figgerits() {
                                         {
                                             clue.word.split('').map((char, ind) => (
                                                 <li className="" key={`${char}-${ind}`}>
-                                                    {isEncoded(char) && <button
-                                                        className={clsx('answer-box', {
-                                                            current: currentElement.type === 'clue' && currentElement.index === ind,
-                                                            hover: highlighted === encoding[char.toLowerCase()],
-                                                            active: active === encoding[char.toLowerCase()],
-                                                        }
-                                                        )}
-                                                        onClick={(e) => activate(e, encoding[char.toLowerCase()], 'clue')}
-                                                        onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
-                                                        onMouseLeave={() => setHighlighted(null)}
-                                                    //   :data-index="index" :data-ind="ind" @click="activate($event, encoding[char.toLowerCase()], 'clue')"
-                                                    //   @mouseenter="highlight(encoding[char.toLowerCase()])" @mouseleave="highlight(null)"
-                                                    >
-                                                        <span className="user-input">
-                                                            {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
-                                                        </span>
-                                                        <span className="divider"></span>
-                                                        <span className="encoding">
-                                                            {encoding[char.toLowerCase()]}
-                                                        </span>
-                                                    </button>}
+                                                    {isEncoded(char) &&
+                                                        <button
+                                                            data-index={index}
+                                                            data-ind={ind}
+                                                            data-type="clue"
+                                                            className={clsx('answer-box', {
+                                                                current: currentElement.type == 'clue' && currentElement.index == index && currentElement.ind == ind,
+                                                                hover: highlighted === encoding[char.toLowerCase()],
+                                                                active: active === encoding[char.toLowerCase()],
+                                                            }
+                                                            )}
+                                                            onClick={(e) => activate(e, encoding[char.toLowerCase()], 'clue')}
+                                                            onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
+                                                            onMouseLeave={() => setHighlighted(null)}
+                                                        //   :data-index="index" :data-ind="ind" @click="activate($event, encoding[char.toLowerCase()], 'clue')"
+                                                        //   @mouseenter="highlight(encoding[char.toLowerCase()])" @mouseleave="highlight(null)"
+                                                        >
+                                                            <span className="user-input">
+                                                                {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
+                                                            </span>
+                                                            <span className="divider"></span>
+                                                            <span className="encoding">
+                                                                {encoding[char.toLowerCase()]}
+                                                            </span>
+                                                        </button>}
                                                 </li>
                                             ))
                                         }
