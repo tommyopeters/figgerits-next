@@ -1,6 +1,19 @@
 export { };
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
+interface PuzzleProgress {
+    _id: mongoose.Types.ObjectId;
+    puzzleId: mongoose.Types.ObjectId;
+    completed: boolean,
+    skipped: boolean,
+    hintsUsed: number,
+    attempts: number,
+    timeTaken: number,
+    dateCompleted?: Date,
+    encoding?: object,
+    userInput?: object | null,
+    actionThread?: [] | null,
+}
 interface IUser extends Document {
     uid: string;
     email: string;
@@ -8,8 +21,22 @@ interface IUser extends Document {
     displayName: string;
     firstName: string;
     lastName: string;
-  }
-  
+    puzzleProgress: PuzzleProgress[];
+}
+
+
+const PuzzleProgressSchema: Schema = new Schema({
+    _id: { type: mongoose.Types.ObjectId, required: true },
+    puzzleId: { type: mongoose.Types.ObjectId, ref: 'Puzzle', required: true },
+    encoding: { type: Object, required: true },
+    completed: { type: Boolean, default: false },
+    skipped: { type: Boolean, default: false },
+    hintsUsed: { type: Number, default: 0 },
+    attempts: { type: Number, default: 0 },
+    timeTaken: { type: Number, default: 0 },
+    userInput: { type: Object, default: {} },
+    actionThread: { type: Array, default: [] },
+});
 
 const UserSchema: Schema = new mongoose.Schema(
     {
@@ -47,18 +74,7 @@ const UserSchema: Schema = new mongoose.Schema(
             required: true,
             unique: true,
         },
-        puzzleProgress: {
-            type: [{
-                puzzleId: String,
-                completed: Boolean,
-                skipped: Boolean,
-                hintsUsed: Number,
-                attempts: Number,
-                timeTaken: Number,
-                dateCompleted: Date,
-            }],
-            required: false,
-        },
+        puzzleProgress: [PuzzleProgressSchema],
 
     },
     {
