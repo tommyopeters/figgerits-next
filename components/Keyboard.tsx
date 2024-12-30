@@ -38,7 +38,7 @@ function Keyboard({handleKeyboardInput, handleDelete, handleUndo}: KeyboardProps
                 <button onClick={() => handleClick('l')}>L</button>
             </div>
             <div className="row">
-                <button onClick={() => handleUndo()} className="action-button undo"><CornerDownLeft width="30" height="30" /></button>
+                <button onClick={() => handleUndo()} className="action-button undo"><CornerDownLeft /></button>
                 <button onClick={() => handleClick('z')}>Z</button>
                 <button onClick={() => handleClick('x')}>X</button>
                 <button onClick={() => handleClick('c')}>C</button>
@@ -46,7 +46,7 @@ function Keyboard({handleKeyboardInput, handleDelete, handleUndo}: KeyboardProps
                 <button onClick={() => handleClick('b')}>B</button>
                 <button onClick={() => handleClick('n')}>N</button>
                 <button onClick={() => handleClick('m')}>M</button>
-                <button onClick={() => handleDelete()} className="action-button delete"><Delete width="30" height="30" /></button>
+                <button onClick={() => handleDelete()} className="action-button delete"><Delete /></button>
             </div>
         </div>
     )

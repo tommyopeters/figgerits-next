@@ -24,8 +24,6 @@ export async function GET() {
     const currentPuzzle = user?.puzzleProgress?.find(progress => !progress.completed && !progress.skipped);
     if (currentPuzzle) {
       const puzzle = await PuzzleModel.findById(currentPuzzle.puzzleId);
-      // const encryptedPuzzle = encrypt(JSON.stringify(puzzle));
-      // res.status(200).json({ puzzle: encryptedPuzzle });
       const puzzleData = {
         ...puzzle?.toObject(),
         encoding: currentPuzzle.encoding,
@@ -67,8 +65,6 @@ export async function GET() {
         });
         await user.save();
 
-        // const encryptedPuzzle = encrypt(JSON.stringify(puzzle));
-        // res.status(200).json({ puzzle: encryptedPuzzle });
         return NextResponse.json(puzzle);
       }
 
@@ -78,8 +74,7 @@ export async function GET() {
 
   } catch (error) {
     console.error(error);
-    // res.status(500).send({ error: "An error occurred while fetching the puzzle." });
-    return NextResponse.json({ message: 'An error occurred while fetching the puzzle.' }, { status: 404 });
+    return NextResponse.json({ message: 'An error occurred while fetching the puzzle.' }, { status: 500 });
   }
 
 }

@@ -1,12 +1,13 @@
 .figgerits {
   height: calc(var(--vh, 1vh) * 100);
-  // max-height: -webkit-fill-available;
+  width: 100vw;
   display: grid;
   grid-template-rows: max-content 1fr max-content;
   position: relative;
   overflow: hidden;
 
   .quote {
+    width: 100vw;
     background-color: white;
     padding: 10px;
 
@@ -105,8 +106,10 @@ div.non-char {
           text-transform: uppercase;
         }
       }
+
       .word {
         display: flex;
+
         .letters {
           display: flex;
           gap: 5px;
@@ -146,6 +149,7 @@ body {
 }
 
 .keyboard {
+  width: 100vw;
   padding: 10px 0;
   background-color: #d1d4db;
   display: flex;
@@ -174,7 +178,7 @@ body {
       justify-content: center;
 
       &.action-button {
-        background-color: rgb(174,179,185);
+        background-color: rgb(174, 179, 185);
         width: 12vw;
 
         display: flex;
@@ -186,10 +190,12 @@ body {
         transform: translateY(-1px);
         box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.25);
       }
+
       &:active {
         transform: translateY(0);
         box-shadow: 0 3px 3px -1px rgba(0, 0, 0, 0.25);
       }
+
     }
   }
 }
@@ -227,13 +233,20 @@ body {
 }
 
 .action-button {
-  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: 5px;
   background-color: #007bff;
   color: #fff;
   cursor: pointer;
   transition: background-color 0.3s;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .action-button:hover {

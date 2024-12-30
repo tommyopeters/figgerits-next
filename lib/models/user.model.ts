@@ -1,19 +1,8 @@
 export { };
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import { PuzzleProgress } from './types';
 
-interface PuzzleProgress {
-    _id: mongoose.Types.ObjectId;
-    puzzleId: mongoose.Types.ObjectId;
-    completed: boolean,
-    skipped: boolean,
-    hintsUsed: number,
-    attempts: number,
-    timeTaken: number,
-    dateCompleted?: Date,
-    encoding?: object,
-    userInput?: object | null,
-    actionThread?: [] | null,
-}
+
 interface IUser extends Document {
     uid: string;
     email: string;
