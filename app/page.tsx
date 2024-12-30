@@ -1,29 +1,21 @@
 'use client';
 
-import { redirect } from 'next/navigation';
 import { SignedOut, SignedIn, SignInButton, UserButton } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from '@/components/ui/button';
+import Figgerits from '@/components/Figgerits';
+import { handleAuth } from "./actions/authActions";
 
 export default function Home() {
 
   useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log(response.ok, response.status);
-
-      if (response.ok) {
-        redirect('/figgerits');
-      }
+    const authenticate = async () => {
+      const response = await handleAuth();
+      console.log(response);
     };
+  
 
-    fetchData();
+    authenticate();
   }, []);
 
 
@@ -34,38 +26,15 @@ export default function Home() {
           <SignInButton><Button>Get access to Figgerits</Button></SignInButton>
         </div>
       </SignedOut>
-      <SignedIn>
+      {/* <SignedIn>
         <UserButton />
         <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
           <Countdown />
         </main>
+      </SignedIn> */}
+      <SignedIn>
+        <Figgerits />
       </SignedIn>
     </>
-  );
-}
-
-// create a countdown component that redirects to /figgerits after 5 seconds with a visual countdown
-
-const Countdown = () => {
-  const [count, setCount] = useState(5);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCount((prevCount) => prevCount - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (count === 0) {
-      redirect('/figgerits');
-    }
-  }, [count]);
-
-  return (
-    <div>
-      <p>You&apos;re logged in. Redirecting to Figgerits in {count} seconds...</p>
-    </div>
   );
 }

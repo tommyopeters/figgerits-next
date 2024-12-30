@@ -2,12 +2,12 @@
 
 import Keyboard from "@/components/Keyboard";
 import clsx from "clsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Result from './Result';
 import { PuzzleData } from '@/utils/types';
-import { revalidatePath } from "next/cache";
 import RevalidatePath from "@/app/actions";
-import { set } from "mongoose";
+
+import { getPuzzleData, updatePuzzleProgress } from "@/app/actions/puzzleActions";
 
 type ElementType = string | number | undefined;
 
@@ -34,12 +34,27 @@ interface Encoding {
 
 }
 
-function Figgerits({ puzzleData }: { puzzleData: PuzzleData }) {
+function Figgerits() {
 
+
+    const [isPending, startTransition] = useTransition();
+    const [puzzleData, setPuzzleData] = useState<PuzzleData | null>(null);
     const [domLoaded, setDomLoaded] = useState(false);
 
     useEffect(() => {
-        if (puzzleData.encoding) {
+        startTransition(() => {
+            getPuzzleData()
+                .then((data) => {
+                    setPuzzleData(data);
+                })
+                .catch((error) => {
+                    console.error('Error fetching puzzle data:', error);
+                });
+        });
+    }, []);
+
+    useEffect(() => {
+        if (puzzleData?.encoding) {
             setDomLoaded(true);
         }
     }, [puzzleData]);
@@ -67,7 +82,7 @@ function Figgerits({ puzzleData }: { puzzleData: PuzzleData }) {
 
 
     const startGame = useCallback((quoteString: string, gameClues: { word: string, clue: string }[], infoString: string, encoding: Encoding, savedUserInput: UserInput | null) => {
-        if(!quoteString || !gameClues || !infoString || !encoding) {
+        if (!quoteString || !gameClues || !infoString || !encoding) {
             return;
         }
         setQuote(quoteString);
@@ -183,34 +198,25 @@ function Figgerits({ puzzleData }: { puzzleData: PuzzleData }) {
         }
     }, [active, actionThread, currentElement, userInput]);
 
-    const updatePuzzleProgress = async (completed: boolean, skipped: boolean, hintsUsed: number, attempts: number, timeTaken: number, userInput: object, actionThread: ActionThreadItem[]) => {
-        try {
-            const res = await fetch('/api/puzzle', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    puzzleId: puzzleData.puzzleId,
-                    completed,
-                    skipped,
-                    hintsUsed,
-                    attempts,
-                    timeTaken,
-                    userInput,
-                    actionThread,
-                }),
-            });
+    const saveProgress = async (completed: boolean, skipped: boolean, hintsUsed: number, attempts: number, timeTaken: number, userInput: object, actionThread: ActionThreadItem[]) => {
+        const puzzleId = puzzleData!.puzzleId;
+        console.log(puzzleId + " is the puzzle id")
+        const progressData = {
+            completed: gameState.complete,
+            skipped: false,
+            hintsUsed: 0,
+            attempts: 0,
+            timeTaken: 0,
+            userInput,
+            actionThread,
+        };
 
-            if (!res.ok) {
-                throw new Error('Failed to update puzzle progress');
-            }
-
-            const data = await res.json();
-            console.log('Puzzle progress updated successfully:', data);
-        } catch (error) {
-            console.error('Error updating puzzle progress:', error);
-        }
+        // try {
+        //     const result = await updatePuzzleProgress(puzzleId, progressData);
+        //     console.log('Puzzle progress updated successfully:', result);
+        // } catch (error) {
+        //     console.error('Error updating puzzle progress:', error);
+        // }
     };
 
 
@@ -228,7 +234,7 @@ function Figgerits({ puzzleData }: { puzzleData: PuzzleData }) {
         } else {
             console.log('No active element');
         }
-        updatePuzzleProgress(gameState.complete, false, 0, 0, 0, userInput, actionThread);
+        saveProgress(gameState.complete, false, 0, 0, 0, userInput, actionThread);
 
 
     }, [userInput]);
@@ -237,11 +243,11 @@ function Figgerits({ puzzleData }: { puzzleData: PuzzleData }) {
         if (gameState.complete) {
             console.log('Puzzle complete!');
 
-            updatePuzzleProgress(gameState.complete, false, 0, 0, 0, userInput, actionThread);
+            saveProgress(gameState.complete, false, 0, 0, 0, userInput, actionThread);
         }
     }, [gameState]);
 
-    const nextPuzzle = () => {  
+    const nextPuzzle = () => {
         setGameState({
             complete: false,
             correct: false
@@ -260,7 +266,7 @@ function Figgerits({ puzzleData }: { puzzleData: PuzzleData }) {
             index: 0,
             ind: 0
         });
-        RevalidatePath('/figgerits');
+        RevalidatePath('/');
     }
 
     const handleAllCharactersFilled = () => {
@@ -318,7 +324,7 @@ function Figgerits({ puzzleData }: { puzzleData: PuzzleData }) {
         } else if (event.key === 'Enter') {
             // handleAllCharactersFilled();
             console.log("Enter")
-        } 
+        }
         // else if (event.key === 'ArrowLeft') {
         //     if (active !== null) {
         //         const answerBoxes = document.querySelectorAll('.answer-box');
@@ -373,7 +379,9 @@ function Figgerits({ puzzleData }: { puzzleData: PuzzleData }) {
             document.removeEventListener('DOMContentLoaded', setFullHeight);
         };
     }, [active, userInput, currentElement, actionThread, highlighted, encoding, gameState, clues, words, info, quote, handleKeyDown]);
-
+    if (isPending) {
+        return <div>Loading...</div>;
+    }
     return (
         !domLoaded ? <div>Loading...</div> :
             <div className="figgerits">
