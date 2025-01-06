@@ -5,9 +5,7 @@ import clsx from "clsx";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import Result from './Result';
 import { PuzzleData } from '@/utils/types';
-import RevalidatePath from "@/app/actions";
-
-import { getPuzzleData, updatePuzzleProgress } from "@/app/actions/puzzleActions";
+import { getPuzzleData, updatePuzzleProgress, completePuzzle } from "@/app/actions/puzzleActions";
 
 type ElementType = string | number | undefined;
 
@@ -39,25 +37,20 @@ function Figgerits() {
 
     const [isPending, startTransition] = useTransition();
     const [puzzleData, setPuzzleData] = useState<PuzzleData | null>(null);
-    const [domLoaded, setDomLoaded] = useState(false);
+    const [rounds, setRounds] = useState(0);
 
     useEffect(() => {
         startTransition(() => {
             getPuzzleData()
                 .then((data) => {
                     setPuzzleData(data);
+                    console.log(data)
                 })
                 .catch((error) => {
                     console.error('Error fetching puzzle data:', error);
                 });
         });
-    }, []);
-
-    useEffect(() => {
-        if (puzzleData?.encoding) {
-            setDomLoaded(true);
-        }
-    }, [puzzleData]);
+    }, [startTransition]);
 
     const [quote, setQuote] = useState('');
     const [info, setInfo] = useState('');
@@ -79,9 +72,26 @@ function Figgerits() {
         document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
 
-
+    const resetValues = () => {
+        setQuote('');
+        setWords([]);
+        setClues([]);
+        setInfo('');
+        setEncoding({});
+        setActive(null);
+        setHighlighted(null);
+        setActionThread([]);
+        setUserInput({});
+        setCurrentElement({
+            type: '',
+            index: 0,
+            ind: 0
+        });
+    };
 
     const startGame = useCallback((quoteString: string, gameClues: { word: string, clue: string }[], infoString: string, encoding: Encoding, savedUserInput: UserInput | null) => {
+        resetValues()
+
         if (!quoteString || !gameClues || !infoString || !encoding) {
             return;
         }
@@ -106,7 +116,6 @@ function Figgerits() {
         if (puzzleData) {
             console.log(puzzleData);
             startGame(puzzleData.quote, puzzleData.clues, puzzleData.info, puzzleData.encoding, puzzleData?.userInput);
-            setDomLoaded(true);
         }
 
     }, [puzzleData, startGame]);
@@ -186,6 +195,11 @@ function Figgerits() {
     }
 
     const handleKeyboardInput = useCallback((character: string) => {
+        setGameState({
+            complete: false,
+            correct: false
+        });
+
         if (active !== null) {
             setActionThread([...actionThread, {
                 previousCharacter: userInput[active],
@@ -195,11 +209,15 @@ function Figgerits() {
             }]);
             // (userInput.value as { [key: number]: string | null })[active.value] = character.toLowerCase();
             setUserInput({ ...userInput, [active]: character.toLowerCase() });
+
+            if (!gameState.complete) {
+                saveProgress(gameState.complete, false, 0, 0, 0, userInput, actionThread);
+            }
         }
     }, [active, actionThread, currentElement, userInput]);
 
     const saveProgress = async (completed: boolean, skipped: boolean, hintsUsed: number, attempts: number, timeTaken: number, userInput: object, actionThread: ActionThreadItem[]) => {
-        const puzzleId = puzzleData!.puzzleId;
+        const puzzleId = puzzleData!._id;
         console.log(puzzleId + " is the puzzle id")
         const progressData = {
             completed: gameState.complete,
@@ -211,12 +229,12 @@ function Figgerits() {
             actionThread,
         };
 
-        // try {
-        //     const result = await updatePuzzleProgress(puzzleId, progressData);
-        //     console.log('Puzzle progress updated successfully:', result);
-        // } catch (error) {
-        //     console.error('Error updating puzzle progress:', error);
-        // }
+        try {
+            const result = await updatePuzzleProgress(puzzleId, progressData);
+            console.log('Puzzle progress updated successfully:', result);
+        } catch (error) {
+            console.error('Error updating puzzle progress:', error);
+        }
     };
 
 
@@ -234,39 +252,46 @@ function Figgerits() {
         } else {
             console.log('No active element');
         }
-        saveProgress(gameState.complete, false, 0, 0, 0, userInput, actionThread);
-
-
     }, [userInput]);
 
-    useEffect(() => {
-        if (gameState.complete) {
-            console.log('Puzzle complete!');
+    // useEffect(() => {
+    //     if (gameState.complete) {
+    //         console.log('Puzzle complete!');
 
-            saveProgress(gameState.complete, false, 0, 0, 0, userInput, actionThread);
-        }
-    }, [gameState]);
+    //         saveProgress(gameState.complete, false, 0, 0, 0, userInput, actionThread);
+    //     }
+    // }, [gameState]);
 
-    const nextPuzzle = () => {
+    const handleNextPuzzle = () => {
         setGameState({
             complete: false,
             correct: false
         });
-        setQuote('');
-        setWords([]);
-        setClues([]);
-        setInfo('');
-        setEncoding({});
-        setActive(null);
-        setHighlighted(null);
-        setActionThread([]);
-        setUserInput({});
+        // setQuote('');
+        // setWords([]);
+        // setClues([]);
+        // setInfo('');
+        // setEncoding({});
+        // setActive(null);
+        // setHighlighted(null);
+        // setActionThread([]);
+        // setUserInput({});
         setCurrentElement({
             type: '',
             index: 0,
             ind: 0
         });
-        RevalidatePath('/');
+
+        startTransition(() => {
+            getPuzzleData()
+                .then((data) => {
+                    setPuzzleData(data);
+                    console.log(data)
+                })
+                .catch((error) => {
+                    console.error('Error fetching puzzle data:', error);
+                });
+        });
     }
 
     const handleAllCharactersFilled = () => {
@@ -275,13 +300,30 @@ function Figgerits() {
             return userInput[encoding[char]] === char;
         });
 
-        setGameState({
-            complete: true,
-            correct: isCorrect
-        });
-
         if (isCorrect) {
-            // store.dispatch('completePuzzle')
+            console.log('------------------------------------------------------')
+            console.log('IS CORRECT!!!!!')
+            const puzzleId = puzzleData!._id;
+            const progressData = {
+                skipped: false,
+                hintsUsed: 0,
+                attempts: 0,
+                timeTaken: 0,
+                userInput,
+                actionThread,
+            };
+            completePuzzle(puzzleId, progressData).then(data => {
+                console.log(data, "Response")
+                setGameState({
+                    complete: true,
+                    correct: isCorrect
+                });
+            });
+        } else {
+            setGameState({
+                complete: true,
+                correct: isCorrect
+            });
         }
     };
 
@@ -383,30 +425,87 @@ function Figgerits() {
         return <div>Loading...</div>;
     }
     return (
-        !domLoaded ? <div>Loading...</div> :
-            <div className="figgerits">
-                <div className="quote">
-                    <ul className="words">
-                        {words?.map((word, index) => (
-                            <li key={word.join('') + index}>
+        <div className="figgerits">
+            <div className="quote">
+                <ul className="words">
+                    {words?.map((word, index) => (
+                        <li key={word.join('') + index}>
+                            <ul className="letters">
+                                {
+                                    word.map((char, ind) => (
+                                        <li key={char + ind}>
+                                            {isEncoded(char) ?
+                                                <button
+                                                    data-index={index}
+                                                    data-ind={ind}
+                                                    data-type="quote"
+                                                    className={clsx('answer-box', {
+                                                        current: currentElement.type == 'quote' && currentElement.index == index && currentElement.ind == ind,
+                                                        hover: highlighted === encoding[char.toLowerCase()],
+                                                        active: active === encoding[char.toLowerCase()],
+                                                    }
+                                                    )}
+                                                    onClick={(e) => activate(e, encoding[char.toLowerCase()], 'quote')}
+                                                    onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
+                                                    onMouseLeave={() => setHighlighted(null)}
+                                                >
+                                                    <span className="user-input">
+                                                        {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
+                                                    </span>
+                                                    <span className="divider"></span>
+                                                    <span className="encoding">
+                                                        {encoding[char.toLowerCase()]}
+                                                    </span>
+                                                </button>
+                                                :
+                                                (char === ' ' ?
+                                                    <div className="space" >
+                                                        {char}
+                                                    </div>
+                                                    :
+                                                    <div className="non-char" >
+                                                        {char}
+                                                    </div>)
+                                            }
+                                        </li>
+                                    ))
+                                }
+                            </ul>
+                        </li>
+                    ))}
+                </ul >
+
+            </div >
+
+            <div className="clues">
+                <h3>Definition & words</h3>
+                <ul>
+                    {clues.map((clue, index) => (
+                        <li key={clue.word}>
+                            <div className="clue">
+                                {clue.clue}
+                            </div>
+                            <div className="word">
                                 <ul className="letters">
                                     {
-                                        word.map((char, ind) => (
-                                            <li key={char + ind}>
-                                                {isEncoded(char) ?
+                                        clue.word.split('').map((char, ind) => (
+                                            <li className="" key={`${char}-${ind}`}>
+                                                {isEncoded(char) &&
                                                     <button
                                                         data-index={index}
                                                         data-ind={ind}
-                                                        data-type="quote"
+                                                        data-type="clue"
                                                         className={clsx('answer-box', {
-                                                            current: currentElement.type == 'quote' && currentElement.index == index && currentElement.ind == ind,
+                                                            current: currentElement.type == 'clue' && currentElement.index == index && currentElement.ind == ind,
                                                             hover: highlighted === encoding[char.toLowerCase()],
                                                             active: active === encoding[char.toLowerCase()],
                                                         }
                                                         )}
-                                                        onClick={(e) => activate(e, encoding[char.toLowerCase()], 'quote')}
+                                                        onClick={(e) => activate(e, encoding[char.toLowerCase()], 'clue')}
                                                         onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
                                                         onMouseLeave={() => setHighlighted(null)}
+                                                    //   :data-index="index" :data-ind="ind" @click="activate($event, encoding[char.toLowerCase()], 'clue')"
+                                                    //   @mouseenter="highlight(encoding[char.toLowerCase()])" @mouseleave="highlight(null)"
                                                     >
                                                         <span className="user-input">
                                                             {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
@@ -415,88 +514,30 @@ function Figgerits() {
                                                         <span className="encoding">
                                                             {encoding[char.toLowerCase()]}
                                                         </span>
-                                                    </button>
-                                                    :
-                                                    (char === ' ' ?
-                                                        <div className="space" >
-                                                            {char}
-                                                        </div>
-                                                        :
-                                                        <div className="non-char" >
-                                                            {char}
-                                                        </div>)
-                                                }
+                                                    </button>}
                                             </li>
                                         ))
                                     }
                                 </ul>
-                            </li>
-                        ))}
-                    </ul >
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
 
-                </div >
-
-                <div className="clues">
-                    <h3>Definition & words</h3>
-                    <ul>
-                        {clues.map((clue, index) => (
-                            <li key={clue.word}>
-                                <div className="clue">
-                                    {clue.clue}
-                                </div>
-                                <div className="word">
-                                    <ul className="letters">
-                                        {
-                                            clue.word.split('').map((char, ind) => (
-                                                <li className="" key={`${char}-${ind}`}>
-                                                    {isEncoded(char) &&
-                                                        <button
-                                                            data-index={index}
-                                                            data-ind={ind}
-                                                            data-type="clue"
-                                                            className={clsx('answer-box', {
-                                                                current: currentElement.type == 'clue' && currentElement.index == index && currentElement.ind == ind,
-                                                                hover: highlighted === encoding[char.toLowerCase()],
-                                                                active: active === encoding[char.toLowerCase()],
-                                                            }
-                                                            )}
-                                                            onClick={(e) => activate(e, encoding[char.toLowerCase()], 'clue')}
-                                                            onMouseEnter={() => setHighlighted(encoding[char.toLowerCase()])}
-                                                            onMouseLeave={() => setHighlighted(null)}
-                                                        //   :data-index="index" :data-ind="ind" @click="activate($event, encoding[char.toLowerCase()], 'clue')"
-                                                        //   @mouseenter="highlight(encoding[char.toLowerCase()])" @mouseleave="highlight(null)"
-                                                        >
-                                                            <span className="user-input">
-                                                                {hasValue(encoding[char.toLowerCase()]) ? getValue(encoding[char.toLowerCase()]) : '?'}
-                                                            </span>
-                                                            <span className="divider"></span>
-                                                            <span className="encoding">
-                                                                {encoding[char.toLowerCase()]}
-                                                            </span>
-                                                        </button>}
-                                                </li>
-                                            ))
-                                        }
-                                    </ul>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* <Result v-if="gameState.complete" :correct="gameState.correct" :quote="quote" :info="info" @next="handleNextPuzzle"
+            {/* <Result v-if="gameState.complete" :correct="gameState.correct" :quote="quote" :info="info" @next="handleNextPuzzle"
                 @back="handleBack" @reset="handleReset"></Result>*/}
-                {gameState.complete &&
-                    <Result
-                        correct={gameState.correct}
-                        quote={quote}
-                        info={info}
-                        onBack={() => console.log('back')}
-                        onNext={() => nextPuzzle()}
-                        onReset={() => console.log('reset')}
-                    />}
-                <Keyboard handleKeyboardInput={handleKeyboardInput} handleDelete={handleDelete} handleUndo={handleUndo}></Keyboard>
-            </div >
+            {gameState.complete &&
+                <Result
+                    correct={gameState.correct}
+                    quote={quote}
+                    info={info}
+                    onBack={() => console.log('back')}
+                    onNext={() => handleNextPuzzle()}
+                    onReset={() => console.log('reset')}
+                />}
+            <Keyboard handleKeyboardInput={handleKeyboardInput} handleDelete={handleDelete} handleUndo={handleUndo}></Keyboard>
+        </div >
     )
 }
 export default Figgerits
