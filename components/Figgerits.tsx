@@ -37,7 +37,6 @@ function Figgerits() {
 
     const [isPending, startTransition] = useTransition();
     const [puzzleData, setPuzzleData] = useState<PuzzleData | null>(null);
-    const [rounds, setRounds] = useState(0);
 
     useEffect(() => {
         startTransition(() => {

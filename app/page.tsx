@@ -1,6 +1,6 @@
 'use client';
 
-import { SignedOut, SignedIn, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedOut, SignedIn, SignInButton } from "@clerk/nextjs";
 import { useEffect, useTransition } from "react";
 import { Button } from '@/components/ui/button';
 import Figgerits from '@/components/Figgerits';
