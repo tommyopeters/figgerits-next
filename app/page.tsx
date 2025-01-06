@@ -1,13 +1,14 @@
 'use client';
 
 import { SignedOut, SignedIn, SignInButton, UserButton } from "@clerk/nextjs";
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { Button } from '@/components/ui/button';
 import Figgerits from '@/components/Figgerits';
 import { handleAuth } from "./actions/authActions";
 
 export default function Home() {
-
+  const [isPending, startTransition] = useTransition();
+  
   useEffect(() => {
     const authenticate = async () => {
       const response = await handleAuth();
@@ -15,8 +16,10 @@ export default function Home() {
     };
   
 
-    authenticate();
-  }, []);
+    startTransition(() => {
+      authenticate();
+    });
+  }, [startTransition]);
 
 
   return (
@@ -33,7 +36,7 @@ export default function Home() {
         </main>
       </SignedIn> */}
       <SignedIn>
-        <Figgerits />
+        {!isPending && <Figgerits />}
       </SignedIn>
     </>
   );
