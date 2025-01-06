@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from './ui/button';
 
 interface ResultProps {
     correct: boolean;
@@ -18,11 +19,11 @@ function Result(props: ResultProps) {
                 {props.correct && <p>{props.info}</p>}
 
                 {props.correct ? (
-                    <button onClick={props.onNext} className="action-button next">Next Puzzle</button>
+                    <Button onClick={props.onNext} className="action-button next">Next Puzzle</Button>
                 ) : (
                     <div className="button-group">
-                        <button onClick={props.onBack} className="action-button back">Go back</button>
-                        <button onClick={props.onReset} className="action-button reset">Reset</button>
+                        <Button onClick={props.onBack} className="action-button back">Go back</Button>
+                        <Button onClick={props.onReset} className="action-button reset">Reset</Button>
                     </div>
                 )}
             </div>
