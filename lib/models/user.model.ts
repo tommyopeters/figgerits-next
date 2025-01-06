@@ -1,6 +1,6 @@
 export { };
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { PuzzleProgress } from './types';
+import { PuzzleProgress } from '@/utils/types';
 
 
 interface IUser extends Document {
