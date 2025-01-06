@@ -71,26 +71,11 @@ function Figgerits() {
         const vh = window.innerHeight * 0.01;
         document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
-
-    const resetValues = () => {
-        setQuote('');
-        setWords([]);
-        setClues([]);
-        setInfo('');
-        setEncoding({});
-        setActive(null);
-        setHighlighted(null);
-        setActionThread([]);
-        setUserInput({});
-        setCurrentElement({
-            type: '',
-            index: 0,
-            ind: 0
-        });
-    };
-
+    
     const startGame = useCallback((quoteString: string, gameClues: { word: string, clue: string }[], infoString: string, encoding: Encoding, savedUserInput: UserInput | null) => {
-        resetValues()
+        
+        setActive(null);
+        setActionThread([]);
 
         if (!quoteString || !gameClues || !infoString || !encoding) {
             return;
