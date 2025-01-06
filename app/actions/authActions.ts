@@ -3,7 +3,6 @@
 import UserModel from "@/lib/models/user.model";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { connect } from "@/lib/db";
-import { NextResponse } from "next/server";
 
 export async function handleAuth() {
     await connect();

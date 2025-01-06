@@ -3,10 +3,10 @@ import { connect } from "@/lib/db";
 
 import UserModel from "@/lib/models/user.model";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { NextApiRequest } from "next";
+// import { NextApiRequest } from "next";
 import { NextResponse } from "next/server";
 
-export async function POST(request: NextApiRequest) {
+export async function POST() {
   await connect();
   const { userId } = await auth();
   const userObject = await currentUser();
