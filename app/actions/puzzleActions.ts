@@ -78,11 +78,11 @@ export async function getPuzzleData() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updatePuzzleProgress(puzzleId: string, progressData: any) {
   console.log(puzzleId)
+  console.log(progressData)
   await connect();
   try {
 
     const { userId } = await auth();
-    console.log()
     const user = await UserModel.findOne({ uid: userId });
     if (!user) {
       throw new Error('User not found');
@@ -100,6 +100,7 @@ export async function updatePuzzleProgress(puzzleId: string, progressData: any) 
             'puzzleProgress.$.timeTaken': progressData.timeTaken,
             'puzzleProgress.$.userInput': progressData.userInput,
             'puzzleProgress.$.actionThread': progressData.actionThread,
+            'puzzleProgress.$.completed': progressData.completed,
           },
         },
         { new: true }

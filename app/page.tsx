@@ -11,8 +11,7 @@ export default function Home() {
   
   useEffect(() => {
     const authenticate = async () => {
-      const response = await handleAuth();
-      console.log(response);
+      await handleAuth();
     };
   
 

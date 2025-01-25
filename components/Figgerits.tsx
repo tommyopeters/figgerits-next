@@ -43,7 +43,6 @@ function Figgerits() {
             getPuzzleData()
                 .then((data) => {
                     setPuzzleData(data);
-                    console.log(data)
                 })
                 .catch((error) => {
                     console.error('Error fetching puzzle data:', error);
@@ -98,7 +97,6 @@ function Figgerits() {
     useEffect(() => {
 
         if (puzzleData) {
-            console.log(puzzleData);
             startGame(puzzleData.quote, puzzleData.clues, puzzleData.info, puzzleData.encoding, puzzleData?.userInput);
         }
 
@@ -148,7 +146,6 @@ function Figgerits() {
     };
 
     const handleDelete = () => {
-        console.log("delete")
         if (active !== null) {
             actionThread.push({
                 previousCharacter: userInput[active],
@@ -162,7 +159,6 @@ function Figgerits() {
     };
 
     const handleUndo = () => {
-        console.log("undo")
         if (actionThread.length > 0) {
             const lastAction = actionThread.pop();
             if (lastAction) {
@@ -176,6 +172,23 @@ function Figgerits() {
                 });
             }
         }
+    }
+
+    const resetPuzzle = () => {
+        const newUserInput = {};
+        Object.keys(userInput).forEach((key) => {
+            newUserInput[key] = null;
+        });
+
+        console.log("resetting puzzle")
+        setGameState({
+            complete: false,
+            correct: false
+        });
+        saveProgress(false, false, 0, 0, 0, {}, []);
+        setUserInput(newUserInput);
+        setActive(null);
+        setActionThread([]);
     }
 
     const handleKeyboardInput = useCallback((character: string) => {
@@ -204,13 +217,13 @@ function Figgerits() {
         const puzzleId = puzzleData!._id;
         console.log(puzzleId + " is the puzzle id")
         const progressData = {
-            completed: gameState.complete,
             skipped: false,
             hintsUsed: 0,
             attempts: 0,
             timeTaken: 0,
             userInput,
             actionThread,
+            completed
         };
 
         try {
@@ -270,7 +283,6 @@ function Figgerits() {
             getPuzzleData()
                 .then((data) => {
                     setPuzzleData(data);
-                    console.log(data)
                 })
                 .catch((error) => {
                     console.error('Error fetching puzzle data:', error);
@@ -296,8 +308,7 @@ function Figgerits() {
                 userInput,
                 actionThread,
             };
-            completePuzzle(puzzleId, progressData).then(data => {
-                console.log(data, "Response")
+            completePuzzle(puzzleId, progressData).then(() => {
                 setGameState({
                     complete: true,
                     correct: isCorrect
@@ -339,6 +350,14 @@ function Figgerits() {
             }
         }
     };
+
+    const returnToPuzzle = () => {
+        setGameState({
+            complete: false,
+            correct: false
+        });
+        handleUndo();
+    }
 
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
         if (active === null) return;
@@ -516,9 +535,9 @@ function Figgerits() {
                     correct={gameState.correct}
                     quote={quote}
                     info={info}
-                    onBack={() => console.log('back')}
+                    onBack={() => returnToPuzzle()}
                     onNext={() => handleNextPuzzle()}
-                    onReset={() => console.log('reset')}
+                    onReset={() => resetPuzzle()}
                 />}
             <Keyboard handleKeyboardInput={handleKeyboardInput} handleDelete={handleDelete} handleUndo={handleUndo}></Keyboard>
         </div >
