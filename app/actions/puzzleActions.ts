@@ -62,7 +62,7 @@ export async function getPuzzleData() {
         });
         await user.save();
 
-        return JSON.parse(JSON.stringify(puzzle)); // Convert to plain object
+        return JSON.parse(JSON.stringify({...puzzle, encoding})); // Convert to plain object
       }
     }
   } catch (error) {
