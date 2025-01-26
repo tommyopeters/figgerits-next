@@ -85,8 +85,8 @@ function Figgerits() {
             setUserInput(savedUserInput);
         } else {
             const initialUserInput: { [key: number]: string | null } = {};
-            Object.keys(encoding).forEach((key) => {
-                initialUserInput[encoding[key]] = null;
+            Object.keys(encoding).forEach((key: string) => {
+                initialUserInput[encoding[key as keyof Encoding]] = null;
             });
             setUserInput(initialUserInput);
         }
@@ -175,9 +175,9 @@ function Figgerits() {
     }
 
     const resetPuzzle = () => {
-        const newUserInput = {};
-        Object.keys(userInput).forEach((key) => {
-            newUserInput[key] = null;
+        const newUserInput: UserInput = {};
+        Object.keys(userInput).forEach((key: string) => {
+            newUserInput[parseInt(key)] = null;
         });
 
         console.log("resetting puzzle")
@@ -264,15 +264,6 @@ function Figgerits() {
             complete: false,
             correct: false
         });
-        // setQuote('');
-        // setWords([]);
-        // setClues([]);
-        // setInfo('');
-        // setEncoding({});
-        // setActive(null);
-        // setHighlighted(null);
-        // setActionThread([]);
-        // setUserInput({});
         setCurrentElement({
             type: '',
             index: 0,
