@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+  onError: (err: Error) => {
+    console.error('Next.js Error:', err);
+  },
 };
 
 export default nextConfig;
