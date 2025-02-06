@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import Result from './Result';
 import { PuzzleData } from '@/utils/types';
 import { getPuzzleData, updatePuzzleProgress, completePuzzle } from "@/app/actions/puzzleActions";
+import Loader from './Loader';
 
 type ElementType = string | number | undefined;
 
@@ -416,7 +417,7 @@ function Figgerits() {
         };
     }, [active, userInput, currentElement, actionThread, highlighted, encoding, gameState, clues, words, info, quote, handleKeyDown]);
     if (isPending) {
-        return <div>Loading...</div>;
+        return <Loader />;
     }
     return (
         <div className="figgerits">
