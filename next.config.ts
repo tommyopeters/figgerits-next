@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
-  onError: (err: Error) => {
-    console.error('Next.js Error:', err);
-  },
 };
 
 export default nextConfig;

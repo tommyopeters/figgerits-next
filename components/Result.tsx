@@ -34,7 +34,7 @@ function Result({ correct, quote, info, onNext, onBack, onReset }: ResultProps) 
                 {correct ? (
                     <>
                         <div className="grid gap-4 py-4">
-                            <blockquote className="italic text-lg border-l-4 border-primary pl-4">"{quote}"</blockquote>
+                        <blockquote className="italic text-lg border-l-4 border-primary pl-4">&ldquo;{quote}&rdquo;</blockquote>
                             <p className="text-sm text-muted-foreground">{info}</p>
                         </div>
                         <DialogFooter>
